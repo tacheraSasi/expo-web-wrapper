@@ -1,11 +1,23 @@
 import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
-import { BackHandler, Platform, StyleSheet } from "react-native";
+import { 
+  BackHandler, 
+  Platform, 
+  StyleSheet, 
+  View, 
+  Text, 
+  ActivityIndicator, 
+  RefreshControl, 
+  ScrollView,
+  Alert,
+  Dimensions
+} from "react-native";
 import { webUrl } from "@/constants/constants";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-export default function WebWrapper() {
+const { width, height } = Dimensions.get('window');
 
+export default function WebWrapper() {
     const [canGoBack, setCanGoBack] = useState(false);
     const webViewRef = useRef<WebView>(null);
     const onAndroidBackPress = useCallback(() => {
