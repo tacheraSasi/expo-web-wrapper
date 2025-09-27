@@ -7,7 +7,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 export default function WebWrapper() {
 
     const [canGoBack, setCanGoBack] = useState(false);
-    const webViewRef = useRef(null);
+    const webViewRef = useRef<WebView>(null);
     const onAndroidBackPress = useCallback(() => {
       if (canGoBack) {
         webViewRef.current?.goBack();
@@ -18,12 +18,9 @@ export default function WebWrapper() {
 
     useEffect(() => {
       if (Platform.OS === "android") {
-        BackHandler.addEventListener("hardwareBackPress", onAndroidBackPress);
+        const subscription = BackHandler.addEventListener("hardwareBackPress", onAndroidBackPress);
         return () => {
-          BackHandler.removeEventListener(
-            "hardwareBackPress",
-            onAndroidBackPress
-          );
+          subscription.remove();
         };
       }
     }, [onAndroidBackPress]);
