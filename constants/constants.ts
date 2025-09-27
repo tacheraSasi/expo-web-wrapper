@@ -1,0 +1,1 @@
+export const webUrl = 'https://tachera.ekilie.com';
