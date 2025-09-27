@@ -16,7 +16,24 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 
-const { width, height } = Dimensions.get("window");
+// Helper function to safely convert values to numbers
+const safeNumber = (value: any, defaultValue: number = 0): number => {
+  try {
+    if (typeof value === "number" && !isNaN(value)) return value;
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? defaultValue : parsed;
+    }
+    return defaultValue;
+  } catch (error) {
+    console.warn("safeNumber conversion error:", error, "value:", value);
+    return defaultValue;
+  }
+};
+
+const windowDimensions = Dimensions.get("window");
+const width = safeNumber(windowDimensions.width, 375);
+const height = safeNumber(windowDimensions.height, 667);
 
 interface WebWrapperState {
   canGoBack: boolean;
@@ -27,21 +44,6 @@ interface WebWrapperState {
   refreshing: boolean;
   currentUrl: string;
 }
-
-// Helper function to safely convert values to numbers
-const safeNumber = (value: any, defaultValue: number = 0): number => {
-  try {
-    if (typeof value === 'number' && !isNaN(value)) return value;
-    if (typeof value === 'string') {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? defaultValue : parsed;
-    }
-    return defaultValue;
-  } catch (error) {
-    console.warn('safeNumber conversion error:', error, 'value:', value);
-    return defaultValue;
-  }
-};
 
 export default function WebWrapper() {
   const [state, setState] = useState<WebWrapperState>({
@@ -109,7 +111,10 @@ export default function WebWrapper() {
       <ThemedText style={styles.loadingText}>Loading...</ThemedText>
       <View style={styles.progressContainer}>
         <View
-          style={[styles.progressBar, { width: `${safeNumber(state.progress, 0) * 100}%` }]}
+          style={[
+            styles.progressBar,
+            { width: `${safeNumber(state.progress, 0) * 100}%` },
+          ]}
         />
       </View>
     </View>
@@ -175,15 +180,20 @@ export default function WebWrapper() {
         }}
         onLoadProgress={(event) => {
           const { canGoBack, canGoForward, progress, url } = event.nativeEvent;
-          
+
           // Debug logging to help identify type issues
-          console.log('onLoadProgress - progress type:', typeof progress, 'value:', progress);
-          
+          console.log(
+            "onLoadProgress - progress type:",
+            typeof progress,
+            "value:",
+            progress
+          );
+
           const numericProgress = safeNumber(progress, 0);
-          
+
           // Ensure progress is within valid range (0-1)
           const validProgress = Math.max(0, Math.min(1, numericProgress));
-          
+
           setState((prev) => ({
             ...prev,
             canGoBack,
@@ -211,7 +221,7 @@ export default function WebWrapper() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: typeof Constants.statusBarHeight === 'number' ? Constants.statusBarHeight : 0,
+    marginTop: safeNumber(Constants.statusBarHeight, 0),
   },
   webview: {
     flex: 1,
