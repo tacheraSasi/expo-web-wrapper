@@ -1,17 +1,17 @@
-import { webUrl } from "@/constants/constants";
+import { webUrl, config } from "@/constants/constants";
 import Constants from "expo-constants";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { 
-  BackHandler, 
-  Dimensions, 
-  Platform, 
-  StyleSheet, 
-  View, 
-  Text, 
-  ActivityIndicator, 
-  RefreshControl, 
-  ScrollView, 
-  Alert 
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Dimensions,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { WebView } from "react-native-webview";
 
@@ -50,7 +50,10 @@ export default function WebWrapper() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      const subscription = BackHandler.addEventListener("hardwareBackPress", onAndroidBackPress);
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onAndroidBackPress
+      );
       return () => {
         subscription.remove();
       };
@@ -58,16 +61,16 @@ export default function WebWrapper() {
   }, [onAndroidBackPress]);
 
   const handleRefresh = useCallback(() => {
-    setState(prev => ({ ...prev, refreshing: true }));
+    setState((prev) => ({ ...prev, refreshing: true }));
     webViewRef.current?.reload();
     // Reset refreshing state after a delay
     setTimeout(() => {
-      setState(prev => ({ ...prev, refreshing: false }));
+      setState((prev) => ({ ...prev, refreshing: false }));
     }, 1000);
   }, []);
 
   const handleError = useCallback(() => {
-    setState(prev => ({ ...prev, error: true, loading: false }));
+    setState((prev) => ({ ...prev, error: true, loading: false }));
     Alert.alert(
       "Connection Error",
       "Unable to load the website. Please check your internet connection and try again.",
@@ -75,11 +78,11 @@ export default function WebWrapper() {
         {
           text: "Retry",
           onPress: () => {
-            setState(prev => ({ ...prev, error: false, loading: true }));
+            setState((prev) => ({ ...prev, error: false, loading: true }));
             webViewRef.current?.reload();
-          }
+          },
         },
-        { text: "Cancel", style: "cancel" }
+        { text: "Cancel", style: "cancel" },
       ]
     );
   }, []);
@@ -89,7 +92,9 @@ export default function WebWrapper() {
       <ActivityIndicator size="large" color="#007AFF" />
       <Text style={styles.loadingText}>Loading...</Text>
       <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, { width: `${state.progress * 100}%` }]} />
+        <View
+          style={[styles.progressBar, { width: `${state.progress * 100}%` }]}
+        />
       </View>
     </View>
   );
@@ -98,7 +103,10 @@ export default function WebWrapper() {
     <ScrollView
       style={styles.errorContainer}
       refreshControl={
-        <RefreshControl refreshing={state.refreshing} onRefresh={handleRefresh} />
+        <RefreshControl
+          refreshing={state.refreshing}
+          onRefresh={handleRefresh}
+        />
       }
     >
       <View style={styles.errorContent}>
@@ -121,27 +129,29 @@ export default function WebWrapper() {
         ref={webViewRef}
         style={[styles.webview, { opacity: state.loading ? 0 : 1 }]}
         source={{ uri: state.currentUrl }}
-        allowsBackForwardNavigationGestures={true}
-        allowFileAccess={true}
-        allowFileAccessFromFileURLs={true}
-        allowUniversalAccessFromFileURLs={true}
+        allowsBackForwardNavigationGestures={config.website.allowsBackForwardNavigationGestures}
+        allowFileAccess={config.webview.allowFileAccess}
+        allowFileAccessFromFileURLs={config.webview.allowFileAccessFromFileURLs}
+        allowUniversalAccessFromFileURLs={config.webview.allowUniversalAccessFromFileURLs}
         startInLoadingState={true}
-        scalesPageToFit={true}
-        bounces={true}
+        scalesPageToFit={config.webview.scalesPageToFit}
+        bounces={config.webview.bounces}
         decelerationRate="normal"
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        cacheEnabled={true}
-        pullToRefreshEnabled={true}
+        javaScriptEnabled={config.webview.javaScriptEnabled}
+        domStorageEnabled={config.webview.domStorageEnabled}
+        cacheEnabled={config.webview.cacheEnabled}
+        pullToRefreshEnabled={config.webview.pullToRefreshEnabled}
+        showsHorizontalScrollIndicator={config.webview.showsHorizontalScrollIndicator}
+        showsVerticalScrollIndicator={config.webview.showsVerticalScrollIndicator}
         onLoadStart={() => {
-          setState(prev => ({ ...prev, loading: true, error: false }));
+          setState((prev) => ({ ...prev, loading: true, error: false }));
         }}
         onLoadEnd={() => {
-          setState(prev => ({ ...prev, loading: false }));
+          setState((prev) => ({ ...prev, loading: false }));
         }}
         onLoadProgress={(event) => {
           const { canGoBack, canGoForward, progress, url } = event.nativeEvent;
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             canGoBack,
             canGoForward,
@@ -159,7 +169,7 @@ export default function WebWrapper() {
         `}
         onMessage={(event) => {
           // Handle messages from injected JavaScript
-          console.log('Message from WebView:', event.nativeEvent.data);
+          console.log("Message from WebView:", event.nativeEvent.data);
         }}
       />
     </View>
@@ -175,57 +185,57 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   loadingContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: config.ui.loadingBackgroundColor,
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1000,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
+    color: "#333",
+    textAlign: "center",
   },
   progressContainer: {
     width: width * 0.7,
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: "#E0E0E0",
     borderRadius: 2,
     marginTop: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBar: {
-    height: '100%',
-    backgroundColor: '#007AFF',
+    height: "100%",
+    backgroundColor: config.ui.progressBarColor,
     borderRadius: 2,
   },
   errorContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: config.ui.errorBackgroundColor,
   },
   errorContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
     minHeight: height * 0.6,
   },
   errorTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorMessage: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     lineHeight: 24,
   },
 });

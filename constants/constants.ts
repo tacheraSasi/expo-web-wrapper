@@ -1,1 +1,4 @@
-export const webUrl = 'https://tachera.ekilie.com';
+import { appConfig } from '@/config/app-config';
+
+export const webUrl = appConfig.website.url;
+export const config = appConfig;
