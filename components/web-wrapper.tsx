@@ -1,4 +1,5 @@
-import { webUrl, config } from "@/constants/constants";
+import { ThemedText } from "@/components/themed-text";
+import { config, webUrl } from "@/constants/constants";
 import Constants from "expo-constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -26,6 +27,21 @@ interface WebWrapperState {
   refreshing: boolean;
   currentUrl: string;
 }
+
+// Helper function to safely convert values to numbers
+const safeNumber = (value: any, defaultValue: number = 0): number => {
+  try {
+    if (typeof value === 'number' && !isNaN(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? defaultValue : parsed;
+    }
+    return defaultValue;
+  } catch (error) {
+    console.warn('safeNumber conversion error:', error, 'value:', value);
+    return defaultValue;
+  }
+};
 
 export default function WebWrapper() {
   const [state, setState] = useState<WebWrapperState>({
@@ -90,10 +106,10 @@ export default function WebWrapper() {
   const renderLoading = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#007AFF" />
-      <Text style={styles.loadingText}>Loading...</Text>
+      <ThemedText style={styles.loadingText}>Loading...</ThemedText>
       <View style={styles.progressContainer}>
         <View
-          style={[styles.progressBar, { width: `${state.progress * 100}%` }]}
+          style={[styles.progressBar, { width: `${safeNumber(state.progress, 0) * 100}%` }]}
         />
       </View>
     </View>
@@ -129,10 +145,14 @@ export default function WebWrapper() {
         ref={webViewRef}
         style={[styles.webview, { opacity: state.loading ? 0 : 1 }]}
         source={{ uri: state.currentUrl }}
-        allowsBackForwardNavigationGestures={config.website.allowsBackForwardNavigationGestures}
+        allowsBackForwardNavigationGestures={
+          config.website.allowsBackForwardNavigationGestures
+        }
         allowFileAccess={config.webview.allowFileAccess}
         allowFileAccessFromFileURLs={config.webview.allowFileAccessFromFileURLs}
-        allowUniversalAccessFromFileURLs={config.webview.allowUniversalAccessFromFileURLs}
+        allowUniversalAccessFromFileURLs={
+          config.webview.allowUniversalAccessFromFileURLs
+        }
         startInLoadingState={true}
         scalesPageToFit={config.webview.scalesPageToFit}
         bounces={config.webview.bounces}
@@ -141,8 +161,12 @@ export default function WebWrapper() {
         domStorageEnabled={config.webview.domStorageEnabled}
         cacheEnabled={config.webview.cacheEnabled}
         pullToRefreshEnabled={config.webview.pullToRefreshEnabled}
-        showsHorizontalScrollIndicator={config.webview.showsHorizontalScrollIndicator}
-        showsVerticalScrollIndicator={config.webview.showsVerticalScrollIndicator}
+        showsHorizontalScrollIndicator={
+          config.webview.showsHorizontalScrollIndicator
+        }
+        showsVerticalScrollIndicator={
+          config.webview.showsVerticalScrollIndicator
+        }
         onLoadStart={() => {
           setState((prev) => ({ ...prev, loading: true, error: false }));
         }}
@@ -151,11 +175,20 @@ export default function WebWrapper() {
         }}
         onLoadProgress={(event) => {
           const { canGoBack, canGoForward, progress, url } = event.nativeEvent;
+          
+          // Debug logging to help identify type issues
+          console.log('onLoadProgress - progress type:', typeof progress, 'value:', progress);
+          
+          const numericProgress = safeNumber(progress, 0);
+          
+          // Ensure progress is within valid range (0-1)
+          const validProgress = Math.max(0, Math.min(1, numericProgress));
+          
           setState((prev) => ({
             ...prev,
             canGoBack,
             canGoForward,
-            progress,
+            progress: validProgress,
             currentUrl: url,
           }));
         }}
@@ -163,8 +196,7 @@ export default function WebWrapper() {
         onHttpError={handleError}
         renderLoading={() => <View />} // Prevent default loading
         injectedJavaScript={`
-          // Add custom JavaScript here if needed
-          // Example: Analytics, custom styling, etc.
+          // Add custom JavaScript here 
           true;
         `}
         onMessage={(event) => {
@@ -179,7 +211,7 @@ export default function WebWrapper() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Constants.statusBarHeight,
+    marginTop: typeof Constants.statusBarHeight === 'number' ? Constants.statusBarHeight : 0,
   },
   webview: {
     flex: 1,

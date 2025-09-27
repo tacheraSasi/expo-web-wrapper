@@ -137,14 +137,11 @@ export const defaultConfig: AppConfig = {
   },
 };
 
-// User configuration (can be customized)
 export const appConfig: AppConfig = {
   ...defaultConfig,
-  
-  // Customize these values for your app
   website: {
     ...defaultConfig.website,
-    url: 'https://tachera.ekilie.com', // Change this to your website
+    url: 'https://tachera.ekilie.com',
   },
 
   app: {
