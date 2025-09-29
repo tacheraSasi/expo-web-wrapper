@@ -32,14 +32,12 @@ const safeNumber = (value: any, defaultValue: number = 0): number => {
 };
 
 const windowDimensions = Dimensions.get("window");
-const width = safeNumber(windowDimensions.width, 375);
 const height = safeNumber(windowDimensions.height, 667);
 
 interface WebWrapperState {
   canGoBack: boolean;
   canGoForward: boolean;
   loading: boolean;
-  progress: number;
   error: boolean;
   refreshing: boolean;
   currentUrl: string;
@@ -50,7 +48,6 @@ export default function WebWrapper() {
     canGoBack: false,
     canGoForward: false,
     loading: true,
-    progress: 0,
     error: false,
     refreshing: false,
     currentUrl: webUrl,
@@ -109,14 +106,6 @@ export default function WebWrapper() {
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#007AFF" />
       <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-      <View style={styles.progressContainer}>
-        <View
-          style={[
-            styles.progressBar,
-            { width: `${safeNumber(state.progress, 0) * 100}%` },
-          ]}
-        />
-      </View>
     </View>
   );
 
@@ -147,23 +136,14 @@ export default function WebWrapper() {
     <View style={styles.container}>
       {state.loading && renderLoading()}
       <WebView
-        ref={webViewRef}
-        style={[styles.webview, { opacity: state.loading ? 0 : 1 }]}
         source={{ uri: state.currentUrl }}
-        allowsBackForwardNavigationGestures={
-          config.website.allowsBackForwardNavigationGestures
-        }
+        javaScriptEnabled={config.webview.javaScriptEnabled}
+        domStorageEnabled={config.webview.domStorageEnabled}
         allowFileAccess={config.webview.allowFileAccess}
         allowFileAccessFromFileURLs={config.webview.allowFileAccessFromFileURLs}
         allowUniversalAccessFromFileURLs={
           config.webview.allowUniversalAccessFromFileURLs
         }
-        startInLoadingState={true}
-        scalesPageToFit={config.webview.scalesPageToFit}
-        bounces={config.webview.bounces}
-        decelerationRate="normal"
-        javaScriptEnabled={config.webview.javaScriptEnabled}
-        domStorageEnabled={config.webview.domStorageEnabled}
         cacheEnabled={config.webview.cacheEnabled}
         pullToRefreshEnabled={config.webview.pullToRefreshEnabled}
         showsHorizontalScrollIndicator={
@@ -172,47 +152,14 @@ export default function WebWrapper() {
         showsVerticalScrollIndicator={
           config.webview.showsVerticalScrollIndicator
         }
-        onLoadStart={() => {
-          setState((prev) => ({ ...prev, loading: true, error: false }));
-        }}
-        onLoadEnd={() => {
-          setState((prev) => ({ ...prev, loading: false }));
-        }}
-        onLoadProgress={(event) => {
-          const { canGoBack, canGoForward, progress, url } = event.nativeEvent;
-
-          // Debug logging to help identify type issues
-          console.log(
-            "onLoadProgress - progress type:",
-            typeof progress,
-            "value:",
-            progress
-          );
-
-          const numericProgress = safeNumber(progress, 0);
-
-          // Ensure progress is within valid range (0-1)
-          const validProgress = Math.max(0, Math.min(1, numericProgress));
-
-          setState((prev) => ({
-            ...prev,
-            canGoBack,
-            canGoForward,
-            progress: validProgress,
-            currentUrl: url,
-          }));
-        }}
+        startInLoadingState={true}
+        onLoadStart={() =>
+          setState((prev) => ({ ...prev, loading: true, error: false }))
+        }
+        onLoadEnd={() => setState((prev) => ({ ...prev, loading: false }))}
         onError={handleError}
         onHttpError={handleError}
-        renderLoading={() => <View />} // Prevent default loading
-        injectedJavaScript={`
-          // Add custom JavaScript here 
-          true;
-        `}
-        onMessage={(event) => {
-          // Handle messages from injected JavaScript
-          console.log("Message from WebView:", event.nativeEvent.data);
-        }}
+        renderLoading={() => <View />}
       />
     </View>
   );
@@ -242,19 +189,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     textAlign: "center",
-  },
-  progressContainer: {
-    width: width * 0.7,
-    height: 4,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 2,
-    marginTop: 20,
-    overflow: "hidden",
-  },
-  progressBar: {
-    height: "100%",
-    backgroundColor: config.ui.progressBarColor,
-    borderRadius: 2,
   },
   errorContainer: {
     flex: 1,
